@@ -20,7 +20,10 @@ const Eleicoes = sequelize.define('eleicoes', {
         type: DataTypes.STRING,
         allowNull: true,
     },
-   
+    eleicao_abrangencia: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     eleicao_cargo_nome: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -44,6 +47,10 @@ const Eleicoes = sequelize.define('eleicoes', {
     },
     eleicao_total_votos: {
         type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    eleicao_situacao: {
+        type: DataTypes.STRING,
         allowNull: false,
     },
     eleicao_percentual: {

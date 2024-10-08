@@ -1,3 +1,5 @@
 /node_modules
 node_modules
 .DS_STORE
+/src/csv
+src/csv
