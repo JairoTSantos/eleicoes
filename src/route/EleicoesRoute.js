@@ -6,6 +6,7 @@ const EleicoesController = require('../controller/EleicoesController');
 //SINCRONIZA O BANCO
 router.get('/eleicoes-sync', EleicoesController.SyncModel);
 
+//PEGAS OS ARQUIVOS NO CDN DO TSE
 router.get('/pegar-arquivos-tse', EleicoesController.GetArquivosCsv);
 
 //PEGA OS RESULTADOS NO CSV

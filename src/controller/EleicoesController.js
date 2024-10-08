@@ -16,8 +16,6 @@ class EleicoesController {
         this.SalvarResultados = this.SalvarResultados.bind(this);
         this.GetResultadoCSV = this.GetResultadoCSV.bind(this);
         this.SyncModel = this.SyncModel.bind(this);
-
-
     }
 
     async Resultados(req, res) {
@@ -112,14 +110,12 @@ class EleicoesController {
     }
 
     async SalvarResultados(req, res) {
-        try {
-            const estado = req.query.estado || process.env.ESTADO_DEPUTADO;
-
+        try {            
             const primeiraEleicao = parseInt(process.env.PRIMEIRA_ELEICAO, 10);
             const ultimaEleicao = parseInt(process.env.ULTIMA_ELEICAO, 10);
 
             for (let ano = primeiraEleicao; ano <= ultimaEleicao; ano += 2) {
-                const resultados = await this.GetResultadoCSV(ano, estado);
+                const resultados = await this.GetResultadoCSV(ano);
 
                 await EleicoesModel.destroy({
                     where: { eleicao_ano: ano }
@@ -135,12 +131,12 @@ class EleicoesController {
         }
     }
 
-    async GetResultadoCSV(anoEleicao, estadoEleicao) {
+    async GetResultadoCSV(anoEleicao) {
         const resultados = {};
         let totalVotosGeral = 0;
 
         return new Promise((resolve, reject) => {
-            fs.createReadStream(`./src/csv/${anoEleicao}/votacao_candidato_munzona_${anoEleicao}_${estadoEleicao}.csv`)
+            fs.createReadStream(`./src/csv/${anoEleicao}/votacao_candidato_munzona_${anoEleicao}_${process.env.ESTADO_DEPUTADO}.csv`)
                 .pipe(iconv.decodeStream('latin1'))
                 .pipe(csv({ separator: ';' }))
                 .on('data', (data) => {
@@ -217,47 +213,41 @@ class EleicoesController {
             const csvFileName = `votacao_candidato_munzona_${ano}_${process.env.ESTADO_DEPUTADO}.csv`;
 
             try {
-                // Criar a pasta do ano se não existir
+                
                 if (!fs.existsSync(outputDir)) {
                     fs.mkdirSync(outputDir, { recursive: true });
                 }
 
-                // Baixar o arquivo ZIP
                 const response = await axios.get(url, { responseType: 'arraybuffer' });
 
-                // Verificar se o download foi bem-sucedido
+                
                 if (response.status !== 200) {
                     throw new Error(`Falha ao baixar o arquivo para o ano ${ano}: ${response.statusText}`);
                 }
 
-                // Salvar o arquivo ZIP
+                
                 fs.writeFileSync(zipFilePath, response.data);
 
-                // Descompactar o arquivo ZIP
+                
                 const zip = new AdmZip(zipFilePath);
                 const zipEntries = zip.getEntries();
 
-                // Verificar se o arquivo CSV desejado está presente
+                
                 const csvEntry = zipEntries.find(entry => entry.entryName === csvFileName);
 
-                if (csvEntry) {
-                    // Extrair o arquivo CSV para o diretório de saída
+                if (csvEntry) {                
                     zip.extractEntryTo(csvEntry.entryName, outputDir, false, true);
                 } else {
                     console.warn(`Arquivo ${csvFileName} não encontrado no ZIP para o ano ${ano}.`);
                 }
-
-                // Remover o arquivo ZIP após extrair o CSV
+                
                 fs.unlinkSync(zipFilePath);
 
             } catch (error) {
-                console.error(`Erro ao processar o ano ${ano}: ${error.message}`);
-                // Continue com o próximo ano mesmo se um erro ocorrer
+                console.error(`Erro ao processar o ano ${ano}: ${error.message}`);                
                 continue;
             }
-        }
-
-        // Responder ao cliente após todos os arquivos terem sido processados
+        }        
         return res.status(200).json({ status: 200, message: 'Todos os arquivos foram processados!' });
     }
 
